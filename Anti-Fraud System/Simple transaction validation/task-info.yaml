@@ -1,0 +1,26 @@
+type: edu
+files:
+  - name: src/antifraud/AntiFraudApplication.java
+    visible: true
+    learner_created: false
+  - name: src/resources/application.properties
+    visible: true
+    learner_created: false
+  - name: test/AntiFraudTest.java
+    visible: false
+    learner_created: false
+  - name: build.gradle
+    visible: true
+    learner_created: false
+  - name: src/antifraud/TransactionController.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/Transaction.java
+    visible: true
+    learner_created: true
+feedback_link: https://hyperskill.org/learn/step/18067#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Mon, 30 Dec 2024 20:18:11 UTC"
+record: 1
