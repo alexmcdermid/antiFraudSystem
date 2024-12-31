@@ -2,6 +2,7 @@ package antifraud.controller;
 
 import antifraud.DTO.UserDTO;
 import antifraud.constants.Role;
+import antifraud.exceptions.RoleConflictException;
 import antifraud.model.User;
 import antifraud.service.UserService;
 import org.slf4j.Logger;
@@ -9,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -96,12 +100,26 @@ public class AuthController {
 
     @PutMapping("/role")
     public ResponseEntity<?> changeRole(@RequestBody User user) {
-        User userToChange = userService.findByUsername(user.getUsername());
-        if (userToChange == null) {
-            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        try {
+            User updatedUser = userService.changeRole(user);
+            UserDTO userDTO = new UserDTO(updatedUser.getId(), updatedUser.getName(), updatedUser.getRole(), updatedUser.getUsername());
+            return ResponseEntity.ok(userDTO);
+
+        } catch (UsernameNotFoundException ex) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+
+        } catch (IllegalArgumentException ex) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        } catch (RoleConflictException ex) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-        User changedUser = userService.changeRole(user);
-        return ResponseEntity.ok(changedUser);
     }
 
     @PutMapping("/access")

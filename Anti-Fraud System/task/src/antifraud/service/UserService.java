@@ -1,6 +1,7 @@
 package antifraud.service;
 
 import antifraud.constants.Role;
+import antifraud.exceptions.RoleConflictException;
 import antifraud.model.User;
 import antifraud.repository.UserRepository;
 import org.slf4j.Logger;
@@ -26,11 +27,21 @@ public class UserService {
     }
 
     public User changeRole(User user) {
-        if (!user.getRole().equals(Role.MERCHANT) && !user.getRole().equals(Role.SUPPORT)) {
-            throw new IllegalArgumentException("Invalid role");
-        }
         User existingUser = userRepository.findByUsernameIgnoreCase(user.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (Role.ADMINISTRATOR.equals(user.getRole())) {
+            throw new IllegalArgumentException("Cannot change role of a user with ADMINISTRATOR role");
+        }
+
+        if (!Role.MERCHANT.equals(existingUser.getRole()) && !Role.SUPPORT.equals(existingUser.getRole())) {
+            throw new IllegalArgumentException("Invalid role specified");
+        }
+
+        if (user.getRole().equals(existingUser.getRole())) {
+            throw new RoleConflictException("The role is already assigned to the user");
+        }
+
         existingUser.setRole(user.getRole());
         return userRepository.save(existingUser);
     }

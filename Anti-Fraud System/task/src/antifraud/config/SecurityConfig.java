@@ -4,6 +4,7 @@ import antifraud.constants.Role;
 import antifraud.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -35,12 +36,15 @@ public class SecurityConfig {
                         .authenticationEntryPoint(restAuthenticationEntryPoint))
                 .headers(headers -> headers.frameOptions().disable())
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/auth/list").hasAnyRole(String.valueOf(Role.ADMINISTRATOR), String.valueOf(Role.SUPPORT))
+                        .requestMatchers("/api/antifraud/transaction/**").hasRole(String.valueOf(Role.MERCHANT))
+                        .requestMatchers("/api/auth/role").hasRole(String.valueOf(Role.ADMINISTRATOR))
+                        .requestMatchers("/api/auth/role/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
+                        .requestMatchers("/api/auth/access").hasRole(String.valueOf(Role.ADMINISTRATOR))
+                        .requestMatchers("/api/auth/access/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
+                        .requestMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
                         .requestMatchers("/api/auth/user").permitAll()
-                        .requestMatchers("/api/auth/deleteall").permitAll()
-                        .requestMatchers("/api/auth/list").hasAnyRole(String.valueOf(Role.ADMINISTRATOR), "SUPPORT")
-                        .requestMatchers("/api/antifraud/transaction").hasRole("MERCHANT")
-                        .requestMatchers("/api/auth/role").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/api/auth/access").hasRole("ADMINISTRATOR")
+                        //.requestMatchers("/api/auth/deleteall").permitAll()
                         .requestMatchers("/actuator/shutdown").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
