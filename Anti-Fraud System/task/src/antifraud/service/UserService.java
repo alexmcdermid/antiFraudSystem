@@ -1,10 +1,12 @@
 package antifraud.service;
 
+import antifraud.constants.Role;
 import antifraud.model.User;
 import antifraud.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,37 @@ public class UserService {
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public User changeRole(User user) {
+        if (!user.getRole().equals(Role.MERCHANT) && !user.getRole().equals(Role.SUPPORT)) {
+            throw new IllegalArgumentException("Invalid role");
+        }
+        User existingUser = userRepository.findByUsernameIgnoreCase(user.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        existingUser.setRole(user.getRole());
+        return userRepository.save(existingUser);
+    }
+
+    public String lockUnlockUser(String username, String operation) {
+        User existingUser = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (Role.ADMINISTRATOR.equals(existingUser.getRole())) {
+            throw new IllegalArgumentException("Administrator cannot be locked");
+        }
+
+        if ("LOCK".equalsIgnoreCase(operation)) {
+            existingUser.setLocked("LOCK");
+            userRepository.save(existingUser);
+            return "User " + username + " locked!";
+        } else if ("UNLOCK".equalsIgnoreCase(operation)) {
+            existingUser.setLocked("UNLOCK");
+            userRepository.save(existingUser);
+            return "User " + username + " unlocked!";
+        }
+
+        return "Invalid operation";
     }
 
     public boolean isUsernameTaken(String username) {
@@ -43,5 +76,9 @@ public class UserService {
 
     public void deleteUser(User user) {
         userRepository.delete(user);
+    }
+
+    public void deleteAll() {
+        userRepository.deleteAll();
     }
 }

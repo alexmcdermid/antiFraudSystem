@@ -1,5 +1,6 @@
 package antifraud.config;
 
+import antifraud.constants.Role;
 import antifraud.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,11 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions().disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/user").permitAll()
+                        .requestMatchers("/api/auth/deleteall").permitAll()
+                        .requestMatchers("/api/auth/list").hasAnyRole(String.valueOf(Role.ADMINISTRATOR), "SUPPORT")
+                        .requestMatchers("/api/antifraud/transaction").hasRole("MERCHANT")
+                        .requestMatchers("/api/auth/role").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/api/auth/access").hasRole("ADMINISTRATOR")
                         .requestMatchers("/actuator/shutdown").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

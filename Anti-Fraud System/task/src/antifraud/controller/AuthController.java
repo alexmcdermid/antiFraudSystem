@@ -1,6 +1,7 @@
 package antifraud.controller;
 
 import antifraud.DTO.UserDTO;
+import antifraud.constants.Role;
 import antifraud.model.User;
 import antifraud.service.UserService;
 import org.slf4j.Logger;
@@ -27,6 +28,11 @@ public class AuthController {
         this.userService = userService;
     }
 
+    @PostMapping("/deleteall")
+    public void deleteAll() {
+        userService.deleteAll();
+    }
+
     @PostMapping("/user")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
@@ -45,8 +51,16 @@ public class AuthController {
             return new ResponseEntity<>("Username already exists", HttpStatus.CONFLICT);
         }
 
+        user.setLocked("LOCK");
+
+        if (userService.getAllUsers().isEmpty()) {
+            user.setRole(Role.ADMINISTRATOR);
+            user.setLocked("UNLOCK");
+        } else {
+            user.setRole(Role.MERCHANT);
+        }
         User savedUser = userService.saveUser(user);
-        UserDTO userDTO = new UserDTO(savedUser.getId(), savedUser.getName(), savedUser.getUsername());
+        UserDTO userDTO = new UserDTO(savedUser.getId(), savedUser.getName(), savedUser.getRole(), savedUser.getUsername());
 
         return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
     }
@@ -56,7 +70,7 @@ public class AuthController {
         try {
             List<User> users = userService.getAllUsers();
             List<UserDTO> userDTOs = users.stream()
-                    .map(user -> new UserDTO(user.getId(), user.getName(), user.getUsername()))
+                    .map(user -> new UserDTO(user.getId(), user.getName(), user.getRole(), user.getUsername()))
                     .toList();
             return ResponseEntity.ok(userDTOs);
         } catch (Exception e) {
@@ -78,5 +92,23 @@ public class AuthController {
         responseMap.put("status", "Deleted successfully!");
 
         return ResponseEntity.ok().body(responseMap);
+    }
+
+    @PutMapping("/role")
+    public ResponseEntity<?> changeRole(@RequestBody User user) {
+        User userToChange = userService.findByUsername(user.getUsername());
+        if (userToChange == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+        User changedUser = userService.changeRole(user);
+        return ResponseEntity.ok(changedUser);
+    }
+
+    @PutMapping("/access")
+    public ResponseEntity<?> lockUnlockUser(@RequestBody Map<String, String> body) {
+        String statusMessage = userService.lockUnlockUser(body.get("username"), body.get("operation"));
+        Map<String, String> response = new HashMap<>();
+        response.put("status", statusMessage);
+        return ResponseEntity.ok(response);
     }
 }

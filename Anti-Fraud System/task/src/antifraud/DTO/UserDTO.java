@@ -1,14 +1,18 @@
 package antifraud.DTO;
 
+import antifraud.constants.Role;
+
 public class UserDTO {
 
     private Long id;
     private String name;
+    private Role role;
     private String username;
 
-    public UserDTO(Long id, String name, String username) {
+    public UserDTO(Long id, String name, Role role, String username) {
         this.id = id;
         this.name = name;
+        this.role = role;
         this.username = username;
     }
 
@@ -28,6 +32,14 @@ public class UserDTO {
         this.name = name;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -41,6 +53,7 @@ public class UserDTO {
         return "UserDTO{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", role='" + role.toString() + '\'' +
                 ", username='" + username + '\'' +
                 '}';
     }
