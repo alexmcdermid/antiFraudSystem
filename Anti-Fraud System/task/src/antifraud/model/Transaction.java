@@ -1,4 +1,4 @@
-package antifraud;
+package antifraud.model;
 
 public class Transaction {
     private Long amount;
