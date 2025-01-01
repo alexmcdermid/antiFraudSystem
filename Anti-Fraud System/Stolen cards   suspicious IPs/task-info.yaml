@@ -13,6 +13,69 @@ files:
   - name: test/AntiFraudTest.java
     visible: false
     learner_created: false
+  - name: src/antifraud/controller/TransactionController.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/model/Transaction.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/model/User.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/constants/Role.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/exceptions/RoleConflictException.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/repository/UserRepository.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/config/RestAuthenticationEntryPoint.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/controller/AuthController.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/DTO/UserDTO.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/config/SecurityConfig.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/service/UserService.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/service/CustomUserDetailsService.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/model/IP.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/repository/IPRepository.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/service/IPService.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/DTO/IPDTO.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/model/StolenCard.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/DTO/StolenCardDTO.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/repository/StolenCardRepository.java
+    visible: true
+    learner_created: true
+  - name: src/antifraud/service/StolenCardService.java
+    visible: true
+    learner_created: true
 feedback_link: https://hyperskill.org/learn/step/18070#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Wed, 01 Jan 2025 00:45:01 UTC"
 record: -1

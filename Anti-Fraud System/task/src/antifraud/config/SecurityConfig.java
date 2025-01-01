@@ -38,11 +38,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/list").hasAnyRole(String.valueOf(Role.ADMINISTRATOR), String.valueOf(Role.SUPPORT))
                         .requestMatchers("/api/antifraud/transaction/**").hasRole(String.valueOf(Role.MERCHANT))
-                        .requestMatchers("/api/auth/role").hasRole(String.valueOf(Role.ADMINISTRATOR))
                         .requestMatchers("/api/auth/role/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
-                        .requestMatchers("/api/auth/access").hasRole(String.valueOf(Role.ADMINISTRATOR))
                         .requestMatchers("/api/auth/access/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
                         .requestMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole(String.valueOf(Role.ADMINISTRATOR))
+                        .requestMatchers("/api/antifraud/suspicious-ip/**").hasRole(String.valueOf(Role.SUPPORT))
+                        .requestMatchers("/api/antifraud/stolencard/**").hasRole(String.valueOf(Role.SUPPORT))
                         .requestMatchers("/api/auth/user").permitAll()
                         //.requestMatchers("/api/auth/deleteall").permitAll()
                         .requestMatchers("/actuator/shutdown").permitAll()
