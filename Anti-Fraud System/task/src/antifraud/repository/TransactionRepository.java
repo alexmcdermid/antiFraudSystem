@@ -7,5 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+    List<Transaction> findAllByOrderByIdAsc();
+    List<Transaction> findByNumberOrderByIdAsc(String number);
     List<Transaction> findByNumberAndDateBetween(String number, Date startDate, Date endDate);
 }

@@ -17,6 +17,8 @@ public class Transaction {
     private String number;
     private String region;
     private Date date;
+    private String result;
+    private String feedback = "";
 
     public Long getId() {
         return id;
@@ -45,4 +47,12 @@ public class Transaction {
     public Date getDate() {return date;}
 
     public void setDate(Date date) {this.date = date;}
+
+    public String getResult() {return result;}
+
+    public void setResult(String result) {this.result = result;}
+
+    public String getFeedback() {return feedback;}
+
+    public void setFeedback(String feedback) {this.feedback = feedback;}
 }

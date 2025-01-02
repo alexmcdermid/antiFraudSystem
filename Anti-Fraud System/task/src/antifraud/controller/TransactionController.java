@@ -1,11 +1,13 @@
 package antifraud.controller;
 
+import antifraud.DTO.FeedbackRequestDTO;
 import antifraud.DTO.IPDTO;
 import antifraud.DTO.StolenCardDTO;
 import antifraud.constants.Region;
 import antifraud.model.IP;
 import antifraud.model.StolenCard;
 import antifraud.model.Transaction;
+import antifraud.service.GlobalLimitsService;
 import antifraud.service.IPService;
 import antifraud.service.StolenCardService;
 import antifraud.service.TransactionService;
@@ -18,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -32,12 +35,14 @@ public class TransactionController {
             "^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\\.){3}" +
                     "(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$");
     private final TransactionService transactionService;
+    private final GlobalLimitsService globalLimitsService;
 
     @Autowired
-    public TransactionController(IPService ipService, StolenCardService stolenCardService, TransactionService transactionService) {
+    public TransactionController(IPService ipService, StolenCardService stolenCardService, TransactionService transactionService, GlobalLimitsService globalLimitsService) {
         this.ipService = ipService;
         this.stolenCardService = stolenCardService;
         this.transactionService = transactionService;
+        this.globalLimitsService = globalLimitsService;
     }
 
     @PostMapping("/transaction")
@@ -130,21 +135,126 @@ public class TransactionController {
         }
 
         // amount
-        if (transaction.getAmount() > 1500) {
+        long allowedLimit = globalLimitsService.getAllowedLimit();
+        long manualLimit  = globalLimitsService.getManualLimit();
+
+        if (transaction.getAmount() > manualLimit) {
             result = "PROHIBITED";
             reasons.add("amount");
-        } else if (transaction.getAmount() > 200 && reasons.isEmpty()) {
+        } else if (transaction.getAmount() > allowedLimit && reasons.isEmpty()) {
             result = "MANUAL_PROCESSING";
             reasons.add("amount");
         }
 
         String info = reasons.isEmpty() ? "none" : String.join(", ", reasons);
 
+        transaction.setResult(result);
         transactionService.saveTransaction(transaction);
 
         response.put("result", result);
         response.put("info", info);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/transaction")
+    public ResponseEntity<?> updateTransactionFeedback(@RequestBody FeedbackRequestDTO request) {
+        if (request.getTransactionId() == null || request.getFeedback() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String fb = request.getFeedback().trim().toUpperCase();
+        if (!List.of("ALLOWED","MANUAL_PROCESSING","PROHIBITED").contains(fb)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Transaction tx = transactionService.getTransactionById(request.getTransactionId());
+        if (tx == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (tx.getFeedback() != null && !tx.getFeedback().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        try {
+            globalLimitsService.applyFeedback(tx.getResult(), fb, tx.getAmount());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
+
+        tx.setFeedback(fb);
+        transactionService.saveTransaction(tx);
+
+        Map<String,Object> body = new LinkedHashMap<>();
+        body.put("transactionId", tx.getId());
+        body.put("amount", tx.getAmount());
+        body.put("ip", tx.getIp());
+        body.put("number", tx.getNumber());
+        body.put("region", tx.getRegion());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String dateString = sdf.format(tx.getDate());
+        body.put("date", dateString);
+        body.put("result", tx.getResult());
+        body.put("feedback", tx.getFeedback());
+        return ResponseEntity.ok(body);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getAllTransactionHistory() {
+        List<Transaction> allTx = transactionService.getAllTransactionsSorted();
+
+        List<Map<String,Object>> list = new ArrayList<>();
+        for (Transaction tx : allTx) {
+            Map<String,Object> row = new LinkedHashMap<>();
+            row.put("transactionId", tx.getId());
+            row.put("amount", tx.getAmount());
+            row.put("ip", tx.getIp());
+            row.put("number", tx.getNumber());
+            row.put("region", tx.getRegion());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String dateString = sdf.format(tx.getDate());
+            row.put("date", dateString);
+            row.put("result", tx.getResult());
+            row.put("feedback", tx.getFeedback() == null ? "" : tx.getFeedback());
+            list.add(row);
+        }
+
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/history/{number}")
+    public ResponseEntity<?> getTransactionHistoryByCard(@PathVariable String number) {
+
+        if (!isValidCardNumber(Long.valueOf(number))) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<Transaction> txList = transactionService.getTransactionsByNumberSorted(number);
+        if (txList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<Map<String,Object>> list = new ArrayList<>();
+        for (Transaction tx : txList) {
+            Map<String,Object> row = new LinkedHashMap<>();
+            row.put("transactionId", tx.getId());
+            row.put("amount", tx.getAmount());
+            row.put("ip", tx.getIp());
+            row.put("number", tx.getNumber());
+            row.put("region", tx.getRegion());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String dateString = sdf.format(tx.getDate());
+            row.put("date", dateString);
+            row.put("date", dateString);
+            row.put("result", tx.getResult());
+            row.put("feedback", tx.getFeedback() == null ? "" : tx.getFeedback());
+            list.add(row);
+        }
+
+        return ResponseEntity.ok(list);
     }
 
     @PostMapping("/suspicious-ip")

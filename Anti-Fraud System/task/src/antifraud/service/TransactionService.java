@@ -20,6 +20,18 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
+    public Transaction getTransactionById(Long id) {
+        return transactionRepository.findById(id).orElse(null);
+    }
+
+    public List<Transaction> getAllTransactionsSorted() {
+        return transactionRepository.findAllByOrderByIdAsc();
+    }
+
+    public List<Transaction> getTransactionsByNumberSorted(String number) {
+        return transactionRepository.findByNumberOrderByIdAsc(number);
+    }
+
     public List<Transaction> findByNumberAndDateBetween(String cardNumber, Date afterDate, Date currentDate) {
         return transactionRepository.findByNumberAndDateBetween(cardNumber, afterDate, currentDate);
     }
