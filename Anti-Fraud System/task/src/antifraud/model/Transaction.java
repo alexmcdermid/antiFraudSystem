@@ -1,9 +1,13 @@
 package antifraud.model;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.util.Date;
+
+@Entity
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -11,7 +15,8 @@ public class Transaction {
     private Long amount;
     private String ip;
     private String number;
-    private String info;
+    private String region;
+    private Date date;
 
     public Long getId() {
         return id;
@@ -33,7 +38,11 @@ public class Transaction {
 
     public void setNumber(String number) {this.number = number;}
 
-    public String getInfo() {return info;}
+    public String getRegion() {return region;}
 
-    public void setInfo(String info) {this.info = info;}
+    public void setRegion(String region) {this.region = region;}
+
+    public Date getDate() {return date;}
+
+    public void setDate(Date date) {this.date = date;}
 }
